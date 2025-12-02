@@ -58,7 +58,7 @@ http.createServer((req, res) => {
     res.write(`
       <html>
         <head>
-          <title>GKE + Cloud SQL User Data</title>
+          <title>GKE + Cloud SQL User Data Demo</title>
           <style>
             body { font-family: Arial; margin: 30px; text-align: center; }
             .box { border: 2px solid #059862; border-radius: 10px; padding: 20px; display: inline-block; }
