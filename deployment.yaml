@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: helloworld
-        image: gcr.io/local-terminus-473617-j6/helloworld:v1
+        image: gcr.io/local-terminus-473617-j6/helloworld:latest
         ports:
         - containerPort: 8080
         env:
@@ -34,12 +34,12 @@ spec:
               name: mysql-secret
               key: db_name
 
-      # Cloud SQL Auth Proxy sidecar container
+      # 🔥 Cloud SQL Auth Proxy sidecar
       - name: cloud-sql-proxy
         image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.3
         args:
-        - "--port=3306"
-        - "local-terminus-473617-j6:asia-south1:helloworld-db"
+          - "--port=3306"
+          - "local-terminus-473617-j6:asia-south1:helloworld-db"
         securityContext:
           runAsNonRoot: true
 ---
