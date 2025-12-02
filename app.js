@@ -7,29 +7,31 @@ const port = process.env.PORT || 8080;
 const version = process.env.VERSION || process.env.COMMIT_SHA || "dev";
 const deployedAt = new Date().toISOString();
 
-// ----- Database Connection (POOL with auto-reconnect) -----
+// ----- Database Pool (Auto-Reconnect) -----
 const db = mysql.createPool({
-  host: '127.0.0.1',                // Cloud SQL Proxy host inside the pod
+  host: '127.0.0.1',
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
   port: 3306,
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 5,
   queueLimit: 0
 });
 
-let dbStatus = "🔄 Connecting...";
-db.getConnection((err, connection) => {
+let dbStatus = "⏳ Connecting...";
+
+db.getConnection((err, conn) => {
   if (err) {
-    console.error("❌ Database connection failed:", err);
-    dbStatus = "❌ Database connection failed";
+    console.error("❌ Initial DB connection failed:", err);
+    dbStatus = "❌ Database not connected";
   } else {
     console.log("✅ Connected to Cloud SQL MySQL successfully!");
     dbStatus = "✅ Database connected";
-    connection.release();
+    conn.release();
   }
 });
+
 
 // ----- Web Server -----
 http.createServer((req, res) => {
@@ -39,12 +41,15 @@ http.createServer((req, res) => {
     req.on("end", () => {
       const form = qs.parse(body);
 
+      console.log("📨 Form received:", form);
+
       db.query(
         "INSERT INTO users (name, email) VALUES (?, ?)",
         [form.name, form.email],
-        (err) => {
+        err => {
           if (err) console.error("❌ Insert failed:", err);
-          res.writeHead(302, { Location: "/" }); // Redirect after submit
+          else console.log("✅ Insert successful!");
+          res.writeHead(302, { Location: "/" });
           res.end();
         }
       );
@@ -53,7 +58,7 @@ http.createServer((req, res) => {
   }
 
   // Read user records
-  db.query("SELECT * FROM users ORDER BY id DESC LIMIT 10", (err, rows) => {
+  db.query("SELECT * FROM users ORDER BY id DESC LIMIT 10", (err, rows = []) => {
     if (err) {
       console.error("❌ Failed to fetch users:", err);
       rows = [];
@@ -78,7 +83,7 @@ http.createServer((req, res) => {
         </head>
         <body>
           <div class="box">
-            <h1>GKE + Cloud SQL User Demo</h1>
+            <h1>🚀 GKE + Cloud SQL User Demo</h1>
             <p><b>Version:</b> ${version}</p>
             <p><b>Deployed at:</b> ${deployedAt}</p>
             <p><b>DB Status:</b> ${dbStatus}</p>
@@ -93,12 +98,11 @@ http.createServer((req, res) => {
             <h3>Recent submissions</h3>
             <ul>${userList || "<p>No submissions yet</p>"}</ul>
 
-            <p style="margin-top:20px;">Every entry is stored in Cloud SQL MySQL in real time.</p>
+            <p style="margin-top:20px;">💡 Stored in Cloud SQL MySQL in real time.</p>
           </div>
         </body>
       </html>
     `);
     res.end();
   });
-
 }).listen(port, "0.0.0.0", () => console.log(`App running on port ${port}`));
