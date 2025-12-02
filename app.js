@@ -7,24 +7,27 @@ const port = process.env.PORT || 8080;
 const version = process.env.VERSION || process.env.COMMIT_SHA || "dev";
 const deployedAt = new Date().toISOString();
 
-// ----- Database Connection -----
-const db = mysql.createConnection({
-  host: '127.0.0.1',
+// ----- Database Connection (POOL with auto-reconnect) -----
+const db = mysql.createPool({
+  host: '127.0.0.1',                // Cloud SQL Proxy host inside the pod
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  port: 3306
+  port: 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-let dbStatus = "❌ Not connected";
-
-db.connect(err => {
+let dbStatus = "🔄 Connecting...";
+db.getConnection((err, connection) => {
   if (err) {
     console.error("❌ Database connection failed:", err);
     dbStatus = "❌ Database connection failed";
   } else {
     console.log("✅ Connected to Cloud SQL MySQL successfully!");
     dbStatus = "✅ Database connected";
+    connection.release();
   }
 });
 
@@ -35,12 +38,13 @@ http.createServer((req, res) => {
     req.on("data", chunk => (body += chunk));
     req.on("end", () => {
       const form = qs.parse(body);
+
       db.query(
         "INSERT INTO users (name, email) VALUES (?, ?)",
         [form.name, form.email],
-        err => {
-          if (err) console.error("Insert failed:", err);
-          res.writeHead(302, { Location: "/" }); // Redirect after form submit
+        (err) => {
+          if (err) console.error("❌ Insert failed:", err);
+          res.writeHead(302, { Location: "/" }); // Redirect after submit
           res.end();
         }
       );
@@ -50,6 +54,11 @@ http.createServer((req, res) => {
 
   // Read user records
   db.query("SELECT * FROM users ORDER BY id DESC LIMIT 10", (err, rows) => {
+    if (err) {
+      console.error("❌ Failed to fetch users:", err);
+      rows = [];
+    }
+
     const userList = rows
       .map(u => `<li>${u.name} (${u.email}) — ${u.submitted_at}</li>`)
       .join("");
@@ -91,4 +100,5 @@ http.createServer((req, res) => {
     `);
     res.end();
   });
+
 }).listen(port, "0.0.0.0", () => console.log(`App running on port ${port}`));
