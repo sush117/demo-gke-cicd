@@ -83,7 +83,7 @@ http.createServer((req, res) => {
         </head>
         <body>
           <div class="box">
-            <h1>🚀 GKE + Cloud SQL User Demo</h1>
+            <h1>GKE + Cloud SQL User Demo</h1>
             <p><b>Version:</b> ${version}</p>
             <p><b>Deployed at:</b> ${deployedAt}</p>
             <p><b>DB Status:</b> ${dbStatus}</p>
@@ -98,7 +98,7 @@ http.createServer((req, res) => {
             <h3>Recent submissions</h3>
             <ul>${userList || "<p>No submissions yet</p>"}</ul>
 
-            <p style="margin-top:20px;">💡 Stored in Cloud SQL MySQL in real time.</p>
+            <p style="margin-top:20px;">Stored in Cloud SQL MySQL in real time.</p>
           </div>
         </body>
       </html>
