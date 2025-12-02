@@ -1,5 +1,8 @@
 {
   "name": "helloworld",
   "version": "1.0.0",
-  "main": "app.js"
+  "main": "app.js",
+  "dependencies": {
+    "mysql2": "^3.15.3"
+  }
 }
