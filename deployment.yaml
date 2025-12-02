@@ -36,7 +36,7 @@ spec:
 
       # 🔥 Cloud SQL Auth Proxy sidecar
       - name: cloud-sql-proxy
-        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.3
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.3-amd64
         args:
           - "--port=3306"
           - "local-terminus-473617-j6:asia-south1:helloworld-db"
