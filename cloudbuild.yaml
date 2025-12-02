@@ -1,0 +1,22 @@
+steps:
+# Build image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/local-terminus-473617-j6/helloworld:$COMMIT_SHA', '.']
+
+# Push image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/local-terminus-473617-j6/helloworld:$COMMIT_SHA']
+
+# Deploy to GKE
+- name: 'gcr.io/cloud-builders/kubectl'
+  args:
+  - 'set'
+  - 'image'
+  - 'deployment/helloworld'
+  - 'helloworld=gcr.io/local-terminus-473617-j6/helloworld:$COMMIT_SHA'
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-b'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=demo-cluster'
+
+images:
+- 'gcr.io/local-terminus-473617-j6/helloworld:$COMMIT_SHA'
