@@ -1,22 +1,50 @@
 steps:
-# Build image
+# Build Docker image
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/local-terminus-473617-j6/helloworld:$COMMIT_SHA', '.']
+  args:
+    - 'build'
+    - '-t'
+    - 'gcr.io/local-terminus-473617-j6/helloworld:$COMMIT_SHA'
+    - '.'
 
-# Push image
+# Push image to GCR
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/local-terminus-473617-j6/helloworld:$COMMIT_SHA']
+  args:
+    - 'push'
+    - 'gcr.io/local-terminus-473617-j6/helloworld:$COMMIT_SHA'
 
-# Deploy to GKE
+# Authenticate to GKE
+- name: 'gcr.io/cloud-builders/gcloud'
+  args:
+    - 'container'
+    - 'clusters'
+    - 'get-credentials'
+    - 'demo-cluster'
+    - '--zone'
+    - 'us-central1-b'
+    - '--project'
+    - 'local-terminus-473617-j6'
+
+# Deploy new image to Kubernetes
 - name: 'gcr.io/cloud-builders/kubectl'
   args:
-  - 'set'
-  - 'image'
-  - 'deployment/helloworld'
-  - 'helloworld=gcr.io/local-terminus-473617-j6/helloworld:$COMMIT_SHA'
+    - 'set'
+    - 'image'
+    - 'deployment/helloworld'
+    - 'helloworld=gcr.io/local-terminus-473617-j6/helloworld:$COMMIT_SHA'
   env:
-  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-b'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=demo-cluster'
+    - 'CLOUDSDK_COMPUTE_ZONE=us-central1-b'
+    - 'CLOUDSDK_CONTAINER_CLUSTER=demo-cluster'
+
+# OPTIONAL BUT RECOMMENDED: Verify rollout completion
+- name: 'gcr.io/cloud-builders/kubectl'
+  args:
+    - 'rollout'
+    - 'status'
+    - 'deployment/helloworld'
 
 images:
-- 'gcr.io/local-terminus-473617-j6/helloworld:$COMMIT_SHA'
+  - 'gcr.io/local-terminus-473617-j6/helloworld:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

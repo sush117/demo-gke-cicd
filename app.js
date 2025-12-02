@@ -21,7 +21,7 @@ http.createServer((req, res) => {
       </head>
       <body>
         <div class="box">
-          <h1>🚀 Deployment Successful on GKE</h1>
+          <h1>🚀 The Deployment Successful on GKE</h1>
           <p><b>Version:</b> ${version}</p>
           <p><b>Deployed at:</b> ${deployedAt}</p>
           <p>💡 CI/CD Powered by Cloud Build → GCR → GKE</p>
